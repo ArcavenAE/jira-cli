@@ -584,3 +584,9 @@ Decisions Log (`D-393`/`D-394`/`D-395`) and Phase Progress table.
 - `CLAUDE-MD-MSRV-ACTION-SHA`: CLAUDE.md msrv gotcha SHA updated to `e2a55d2f` in #921 (`a64749c8`) after #914 (`6b71cae3`) moved the pin.
 - `COMFY-TABLE-8-0-1-PIN-COMMENT`: comfy-table `=8.0.1` bump and corrected `Cargo.toml` pin comment (rust-version 1.88) in #921 (`a64749c8`); supersedes #855 and #926.
 - `MAINT-20261015-TEMP-DIRS` (housekeeping): worktrees, branches and temp dirs for MAINT-20261015-01/-02 (2026-10-15) and -03, MAINT-20261016-01/-02 (2026-10-16) removed.
+
+## Resolved 2026-10-20 (MAINT-SWEEP-2026-10-15 continued)
+
+- `DENY-TOML-DIRS-V6-COMMENT` (stale deny.toml `dirs` v6 comment) and `CARGO-TOML-LIBC-0-2-183-COMMENT` (stale Cargo.toml libc 0.2.183 comment): refreshed in #935 (`14430890`, MAINT-20261020-01), along with the deny.toml skip-reason refresh (no skips changed, 42 entries) and the DPAPI `windows-sys` 0.61 comment.
+- `KEYRING-WINDOWS-NATIVE-TEST-VACUOUS`: `tests/keyring_windows_native_feature_present.rs` retargeted to structural toml parsing in #935 (two tests had passed vacuously since #838).
+- `PR-854-842-BASE64-DUPLICATE` (the #854/#842 HELD pair): resolved by #936 (`c72f8131`, MAINT-20261020-02: base64 0.23.1 + reqwest 0.13.5 + hyper-util 0.1.21); #854 auto-closed, #842 pending close (still OPEN at v5.61).

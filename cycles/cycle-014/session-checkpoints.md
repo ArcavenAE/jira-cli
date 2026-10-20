@@ -338,3 +338,9 @@ F5-pass-1 checkpoint.
 - Position: sweep IN PROGRESS, develop tip `1ec0caf2`, CI green (run 38790189558). Merged: #919 (`eaaea80c`), #920 (`52a41d29`), #885 (`be51d922`), #883 (`c35e7479`), #892 (`fc12df13`), #918 (`7d999628`), #915 (`fb48fa5a`), #917 (`1ec0caf2`).
 - Open then: #855 (comfy-table =8.0.1; decision MAINT-20261015-03 vs merge as-is), #914 (soak-eligible 2026-10-16), #854/#842 HELD, v0.7.x patch decision, CLAUDE.md msrv action-SHA doc drift (fix after #914).
 - Resolution at v5.60: #855 and #926 superseded by #921 (also fixed the msrv SHA drift); #914 merged as `6b71cae3`.
+
+## Archived checkpoint v5.60 (2026-10-16, maintenance sweep day 2; superseded by v5.61 on 2026-10-20)
+
+- Position: sweep IN PROGRESS, develop tip `6fb556f9`; 15 PRs merged (day 1: #919, #920, #885, #883, #892, #918, #915, #917; day 2: #914, #925, #924, #928, #921, #922, #929).
+- Open then: #927 (soak, awaiting go), #923 (held to 2026-10-23), #854/#842 HELD, v0.7.x patch decision.
+- Resolution at v5.61: #927 auto-closed (superseded by #934); #854/#842 resolved by #936; see Phase Progress row in STATE.md.

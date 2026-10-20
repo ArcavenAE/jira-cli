@@ -2614,3 +2614,14 @@ the real macOS keychain and intermittently hangs. Isolate it via `JR_SERVICE_NAM
 
 The `VP-API-QP-001` proptest oracle mirrors the production case split, so it is not an independent
 oracle; the pinned examples carry the independent kill power. **Target:** next maintenance sweep.
+
+---
+
+## MAINT-SWEEP-2026-10-15 follow-ups (recorded 2026-10-20) — NEW, OPEN
+
+Source: MAINT-20261020-01/-02 (#935, #936). All tracked in STATE.md's Drift Items table.
+
+- `CI-CARGO-DENY-ACTION-PIN-COMMENT` — LOW: the `ci.yml` cargo-deny-action pin comment says only `# v2` (needs the exact version). Touches the CI-gate review scope (six files), so deferred.
+- `DENY-TOML-SKIP-PRUNING` — LOW, optional, human decision: several skips are broader than strictly needed (windows-sys: all 3 in-graph versions skipped where N-1 = 2 would suffice; getrandom similar; windows-targets/arch pairs).
+- `BASIC-AUTH-HEADER-FN-EXTRACT` — LOW, optional: extract a pure `basic_auth_header()` in `src/api/client.rs` so the Basic-auth encoding pin test covers jr's real code path (security LOW-2 / pr-reviewer suggestion).
+- `CHANGELOG-BASE64-EXACT-VERSIONS` — NIT: the base64 `[Unreleased]` entry says 0.22 -> 0.23, not exact patch versions.

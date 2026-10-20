@@ -78,3 +78,13 @@ Target repo: `~/Documents/GITHUB/vsdd-factory` (drbothen/vsdd-factory). Source o
 | 43 | `pr-manager` recommended nonexistent wrapper scripts (`check-stale-verdict.sh`, `enforce-merge-strategy.sh`) | Validate named script paths exist before surfacing commands |
 
 PG numbers covered (45 distinct): 3, 4, 7, 9, 10, 11, 12, 13, 14-49, 51. Rows that merge numbers: #3+#44, #11+#48+#51.
+
+## Addendum 2026-10-20 (MAINT-SWEEP-2026-10-15 continued) — ENGINE process-gap items
+
+| # | Gap | Suggested fix |
+|---|-----|---------------|
+| M1 | `validate-factory-path-staging` PreToolUse hook false-positive: reads the main checkout's branch (`develop`) instead of the worktree's branch | Resolve the branch from the worktree the command targets (`git -C <path>`) |
+| M2 | `pr-manager-completion-guard` hook falsely claims merge is pre-authorized (`AUTHORIZE_MERGE=yes`) | Derive authorization from the real `D-391` gates, not a constant |
+| M3 | `pr-manager-completion-guard` fires a spurious "0 steps" on subagent stops | Skip the guard for non-pr-manager subagent stops |
+| M4 | `pr-manager` handed back before its github-ops child finished (PR not yet created) | Await child completion before hand-back |
+| M5 | `pr-manager` misdiagnosed normal pending CI as "stuck for hours" | Compare against actual run start time / queue state before declaring stuck |

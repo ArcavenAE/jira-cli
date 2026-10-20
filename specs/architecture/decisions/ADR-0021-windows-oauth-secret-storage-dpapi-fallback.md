@@ -3,6 +3,7 @@ document_type: adr
 adr_id: ADR-0021
 status: Accepted
 date: 2026-09-03
+amended: 2026-10-20
 subsystems_affected: ["SS-03", "SS-08", "SS-09"]
 supersedes: null
 superseded_by: null
@@ -673,26 +674,27 @@ in the guard-passing case, never engaged in practice (see VP-AUTHDX-013, F1 §7.
 
 ### 5. Dependency decision: `windows-sys` (already-present, promoted to a direct dependency), NOT the `windows` crate
 
-**Recommendation: use `windows-sys` 0.60.2** for the `Win32_Security_Cryptography` /
+**Recommendation: use `windows-sys` 0.60.2** *(superseded: now 0.61 — see Amendment 2026-10-20)* for the `Win32_Security_Cryptography` /
 `Win32_Foundation` FFI surface (`CryptProtectData`, `CryptUnprotectData`, `DATA_BLOB`,
 `LocalFree`), added as a NEW `[target.'cfg(windows)'.dependencies]` entry in `Cargo.toml`:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.60", features = ["Win32_Security_Cryptography", "Win32_Foundation"] }
+# (superseded: now version = "0.61" — see Amendment 2026-10-20)
 ```
 
-This is **not** a new crate in the dependency graph — `windows-sys` 0.60.2 is already present
+This is **not** a new crate in the dependency graph *(superseded: now 0.61 — see Amendment 2026-10-20)* — `windows-sys` 0.60.2 is already present
 transitively via `keyring`'s `windows-native` feature and already carries a documented,
 reasoned `[[bans.skip]]` entry in `deny.toml` (`.factory/research/…` §D and §6 of the F1 delta
 analysis independently re-verified this against `Cargo.lock`, correcting the research doc's
 "likely already transitive" hedge for the *bare* `windows` crate specifically — that crate is
-genuinely absent). Promoting `windows-sys` to a direct dependency at the SAME version (0.60)
+genuinely absent). Promoting `windows-sys` to a direct dependency at the SAME version (0.60 *(superseded: now 0.61 — see Amendment 2026-10-20)*)
 that keyring already pulls introduces zero new versions into the lock file — it adds a second
 consumer of an already-skipped version, not a new skip. The `deny.toml` `[[bans.skip]]` entry
 for `windows-sys` version `"0.60"` (its `reason` field currently names only keyring's
 `windows-native` feature) MUST be updated in the same F4 change to also name `jr`'s own DPAPI
-usage as a second reason the 0.60 version is pinned — otherwise a future reader sees only
+usage as a second reason the 0.60 version is pinned *(superseded: the DPAPI note now belongs on the 0.61 skip — see Amendment 2026-10-20)* — otherwise a future reader sees only
 "keyring requires it" and might conclude removing keyring's `windows-native` feature makes the
 skip removable, which would now also break the DPAPI module.
 
@@ -1474,7 +1476,7 @@ product-owner" section for the exact wording instruction.
   (scope-trimming) or moving it (chunking).
 - The access/refresh pair gains a real atomicity guarantee it never had before, on ANY
   platform — a side effect of the backend-selection design, not a separate feature.
-- Zero new dependency-graph nodes; `windows-sys` 0.60.2 gains one more consumer inside the
+- Zero new dependency-graph nodes; `windows-sys` 0.60.2 *(superseded: now 0.61 — see Amendment 2026-10-20)* gains one more consumer inside the
   existing, already-reasoned skip.
 - Every "Unlock your keychain" message site becomes accurate for the failure it actually
   reports, closing the secondary root-cause BC (F1 §4) and making the dangling-grant revoke
@@ -1567,7 +1569,7 @@ product-owner" section for the exact wording instruction.
   this ADR modifies and the type-based marker-error pattern it mirrors.
 - `src/cache.rs::cache_root()` — the existing Windows path-resolution seam this ADR reuses
   (new `secrets/` sibling subtree, not the disposable `v1/` cache namespace).
-- `Cargo.lock` (read directly, 2026-09-03) — confirms `windows-sys` 0.60.2 present via keyring;
+- `Cargo.lock` (read directly, 2026-09-03) — confirms `windows-sys` 0.60.2 present via keyring *(point-in-time; direct dep since moved to 0.61 — see Amendment 2026-10-20)*;
   the bare `windows` crate absent; `windows-core` 0.62.2 present via an unrelated
   `iana-time-zone`/`chrono` chain.
 - `deny.toml`'s existing `windows-sys`/`windows-targets` `[[bans.skip]]` ladder (S-WIN-3) — the
@@ -1655,3 +1657,41 @@ product-owner" section for the exact wording instruction.
   formal-verifier" section for the required BC-1.4.038 wording and the new VP-AUTHDX-018 oracle
   assertions.
 </content>
+
+## Amendment (2026-10-20, MAINT-20261020-01) — direct `windows-sys` dependency moved 0.60 -> 0.61
+
+Dated amendment; the original decision (§5: `windows-sys`, not the `windows` crate, promoted to a direct
+`[target.'cfg(windows)'.dependencies]` entry) is NOT reversed. Only the version pin changed. The 0.60/0.60.2
+statements in §5 and in Consequences / Source-Origin are preserved as the historical record and flagged inline.
+
+**What changed.** `jr`'s direct `windows-sys` dependency (used by `src/api/auth_windows_store.rs`'s
+`#[cfg(windows)] mod dpapi` for `CryptProtectData`/`CryptUnprotectData`) moved from `"0.60"` to `"0.61"` in
+#838 (commit `0ce9badb`, 2026-09-19). It was introduced at `"0.60"` by #759 (commit `9119b291`) to match
+keyring 3.6.3's `windows-native` line. The Win32 feature list is unchanged:
+`["Win32_Security_Cryptography", "Win32_Foundation"]`.
+
+**Why.** #838 was an automated dependabot bump (`dependency-type: direct:production`,
+`update-type: version-update:semver-minor`, 0.60.2 -> 0.61.2); it touched only `Cargo.toml` and `Cargo.lock`.
+No design change motivated it. It is routine upkeep, enabled because the ADR's "same version as keyring" constraint was
+a zero-new-nodes convenience, not a correctness requirement.
+
+**Graph consequence.** windows-sys 0.61.2 is already pulled by the broad dependency graph (clap/anstyle-query,
+tokio, dirs-sys, colored, console, errno, etc.), so the direct dependency adds zero new graph nodes at 0.61,
+preserving §5's zero-new-nodes property. windows-sys 0.60.2 now remains only via keyring's `windows-native`
+feature, so `deny.toml`'s `windows-sys` `"0.60"` `[[bans.skip]]` is justified by keyring alone. The DPAPI-usage
+note (which §5 required on the 0.60 skip) now belongs on the `"0.61"` skip entry, where the DPAPI wrapper is one of
+several 0.61 dependents; this is being finalized in branch `chore/maint-20261020-01-deny-comments`
+(MAINT-20261020-01). Consequently §5's warning about not treating keyring's `windows-native` removal as making the
+0.60 skip removable changes: removing keyring's feature would now make the 0.60 skip removable, while the 0.61
+skip is required regardless of the DPAPI module, because the broad graph (clap/anstyle-query, tokio, dirs-sys,
+colored, console, errno, ...) pulls 0.61.2 independently.
+
+**Test.** In `tests/keyring_windows_native_feature_present.rs` (branch `chore/maint-20261020-01-deny-comments`),
+the two stale 0.60 tests (including the AC-020 test, which asserted the direct dependency pins `"0.60"` and the
+`deny.toml` `"0.60"` reason names the DPAPI module) were replaced (commit `8d1e04ab`) by three structural,
+toml-parsed tests: (1) the direct `windows-sys` dependency declares `"0.61"` with the
+`Win32_Security_Cryptography` feature; (2) `Cargo.lock` contains a `windows-sys` 0.61.* package; (3) `deny.toml`
+has a `windows-sys` `"0.61"` `[[bans.skip]]` entry. The existing 0.60 skip-presence test remains.
+
+**Unchanged.** Rejection of the `windows` crate, the FFI surface, the MSRV/F4 verification note, and all other
+ADR-0021 decisions.
