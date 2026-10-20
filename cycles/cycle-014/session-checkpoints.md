@@ -344,3 +344,26 @@ F5-pass-1 checkpoint.
 - Position: sweep IN PROGRESS, develop tip `6fb556f9`; 15 PRs merged (day 1: #919, #920, #885, #883, #892, #918, #915, #917; day 2: #914, #925, #924, #928, #921, #922, #929).
 - Open then: #927 (soak, awaiting go), #923 (held to 2026-10-23), #854/#842 HELD, v0.7.x patch decision.
 - Resolution at v5.61: #927 auto-closed (superseded by #934); #854/#842 resolved by #936; see Phase Progress row in STATE.md.
+
+## Archived checkpoint v5.61 (2026-10-20, maintenance sweep day 3; superseded by v5.62 on 2026-10-20)
+
+**BUDGET -- READ FIRST:** MAINTENANCE SWEEP 2026-10-15 IN PROGRESS (day 3 = 2026-10-20) at steady-state between cycles. No pass-budget concern; the sweep waits on the 2026-10-23 #923 re-check, the #842 close decision and the v0.7.x decision.
+
+**(a) Date and position.** 2026-10-20, maintenance sweep IN PROGRESS (human-requested, Dependabot-focused). No active cycle; cycle-014 stays CLOSED + RELEASED (`v0.8.0-dev.2`). `develop` tip `c72f8131`; CI green at `684eaeb5`, `14430890`, `c72f8131`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. No new `D-NNN` (latest D-410).
+
+**(b) Convergence counter.** None active.
+
+**(c) Done this sweep (merged to develop; 22 PRs).**
+- Days 1-2: 15 PRs (fixes #919, #920, #921, #922, #929; Dependabot #885, #883, #892, #918, #915, #917, #914, #925, #924, #928); #855 and #926 superseded by #921. Day 3: Dependabot #932 (`7b011fa0`), #931 (`49e92539`), #930 (`9e9dd9c4`), #934 (`5976633d`), #933 (`684eaeb5`), all github-ops-merged on the human's instruction after soak/SHA/changelog/advisory validation; fixes #935 (`14430890`, deny.toml reasons, Cargo.toml comments, structural keyring test, ADR-0021 amended) and #936 (`c72f8131`, base64 0.23.1 + reqwest 0.13.5 + hyper-util 0.1.21). Auto-closed: #927 (superseded by #934), #854 (by #936).
+- Human decisions: no Dependabot grouping; weekly Dependabot (Tue 09:00 UTC); weekly full mutation run (Mon 06:00 UTC); stay on Dependabot (no Renovate); dtolnay/rust-toolchain handling deferred. Housekeeping: sweep worktrees/branches/temp dirs removed.
+
+**(d) Still open / pending.**
+- **#923** rust-toolchain `683b588c` (commit of 2026-10-16 02:21Z): HELD until 2026-10-23T02:21Z; then re-check CI vs current develop, merge on the human's go (github-ops, squash, no `--admin`), then a follow-up PR updating the CLAUDE.md msrv-gotcha SHA (still `e2a55d2f`, near line 252). Underlying gap: `DEPENDABOT-BRANCH-PIN-COOLDOWN-GAP` (recommended: Dependabot ignore entry plus manual bumps).
+- **#842** base64 still OPEN though superseded by #936 (Dependabot next runs Tue 09:00 UTC): human decides whether to close it now.
+- v0.7.x patch-release decision for the rustls advisories (triage recommends none).
+- 2026-10-20 follow-ups: CI cargo-deny-action pin comment, optional deny.toml skip pruning, optional `basic_auth_header()` extraction, CHANGELOG nit; engine addendum M1-M5 (see Drift Items).
+- Carried: session-review proposals 1-12 and L-007..L-015; DRAFT stories `S-PG-BC-INDEX-H1-SYNC-1`/`S-PG-FIX-PR-ADV-CONVERGENCE-1`; `engine-handoff-vsdd-factory.md`; `strict: true` deferred; GitHub #904/#906; stale `cycles/CURRENT` pointer; `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory.
+
+**(e) WIP branches.** None (sweep branches deleted); product repo on `develop`.
+
+**(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli`, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect #923, #842) and `gh run list --branch develop` for CI at `c72f8131`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source. Next actions: (1) re-check and merge #923 on 2026-10-23 on the human's go, then the CLAUDE.md SHA follow-up; (2) the #842 close decision; (3) the v0.7.x patch decision; (4) then the maintenance gate and session-reviewer, and the sweep report/closeout.
