@@ -367,3 +367,26 @@ F5-pass-1 checkpoint.
 **(e) WIP branches.** None (sweep branches deleted); product repo on `develop`.
 
 **(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli`, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect #923, #842) and `gh run list --branch develop` for CI at `c72f8131`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source. Next actions: (1) re-check and merge #923 on 2026-10-23 on the human's go, then the CLAUDE.md SHA follow-up; (2) the #842 close decision; (3) the v0.7.x patch decision; (4) then the maintenance gate and session-reviewer, and the sweep report/closeout.
+
+## Archived checkpoint v5.63 (2026-10-20, resumed-session decisions; superseded by v5.64 on 2026-10-22)
+
+**BUDGET -- READ FIRST:** PAUSED 2026-10-20 at MAINTENANCE SWEEP 2026-10-15 day 3 complete, steady-state between cycles. No pass-budget concern; the sweep waits on the #842 manual close and the 2026-10-23 #923 re-check.
+
+**(a) Position (2026-10-20, resumed session).** MAINT-SWEEP-2026-10-15 day 3 done. Today: Dependabot #932 #931 #930 #934 #933 merged; MAINT-20261020-01 (#935 deny.toml/Cargo.toml comment accuracy + structural toml-parsed tests) merged; MAINT-20261020-02 (#936 combined base64 0.23 + reqwest 0.13.5 + hyper 1.12.0 + hyper-util 0.1.21 + want 0.3.2, superseding Dependabot #854/#842) merged by the human; develop green at `c72f8131` (run 39474013995). Resumed-session decisions: #842 close decided (manual), `D-411` no v0.7.x patch release. No active cycle; cycle-014 stays CLOSED + RELEASED (`v0.8.0-dev.2`). LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. Latest decision `D-411`. Next: human closes #842, then #923, then maintenance gate → session-reviewer → sweep report/closeout.
+
+**(b) Convergence.** N/A (no adversarial loop in flight).
+
+**(c) In-flight.** None mid-step; no sub-agents abandoned. Open PRs:
+- **#923** dtolnay/rust-toolchain bump (commit `683b588c` dated 2026-10-16T02:21:45Z; soak ends 2026-10-23T02:21Z; CI green; validated -- only upstream change `scripts/update-revs.sh`, all 7 `uses:` updated); **#842** base64 0.22.1→0.23.1 (superseded by #936; verified `origin/develop` has base64 0.23 / lock 0.23.1 and `c72f8131` is an ancestor of develop; explanatory comment posted at https://github.com/Zious11/jira-cli/pull/842#issuecomment-6302216820; agent-run close blocked by `destructive-command-guard`, so the close is a MANUAL HUMAN ACTION).
+- Main checkout stays on stale local `develop` `fb9d015c` with untracked `.claude/` files (leave alone; agents use `origin/develop`).
+
+**(d) Pending human decisions / actions.**
+- (1) DECIDED: close #842 (superseded by #936). AWAITING MANUAL CLOSE by the human.
+- (2) Merge #923 on/after 2026-10-23T02:21Z after re-checking CI against current develop (human go required), then a follow-up maintenance PR updating the CLAUDE.md msrv-gotcha SHA `e2a55d2f`→`683b588c` (~line 252).
+- (3) RESOLVED (`D-411`): NO v0.7.x patch release for RUSTSEC-2026-0346..0349.
+- Low-priority follow-ups already in OPEN-STANDING-ITEMS: `ci.yml` cargo-deny-action pin comment, optional deny skip pruning, optional `basic_auth_header()` seam, CHANGELOG base64 patch-version nit, engine gaps M1-M5 plus `ENGINE-SUPERSEDED-PR-CLOSE-PATH`, `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory still unset.
+- Carried: session-review proposals 1-12 and L-007..L-015; DRAFT stories `S-PG-BC-INDEX-H1-SYNC-1`/`S-PG-FIX-PR-ADV-CONVERGENCE-1`; `engine-handoff-vsdd-factory.md`; `strict: true` deferred; GitHub #904/#906; stale `cycles/CURRENT` pointer.
+
+**(e) WIP branches.** None.
+
+**(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect #923, and #842 if not yet closed) and `gh run list --branch develop` for CI at `c72f8131`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.

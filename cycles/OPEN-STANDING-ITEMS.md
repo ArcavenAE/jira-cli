@@ -2625,3 +2625,13 @@ Source: MAINT-20261020-01/-02 (#935, #936). All tracked in STATE.md's Drift Item
 - `DENY-TOML-SKIP-PRUNING` — LOW, optional, human decision: several skips are broader than strictly needed (windows-sys: all 3 in-graph versions skipped where N-1 = 2 would suffice; getrandom similar; windows-targets/arch pairs).
 - `BASIC-AUTH-HEADER-FN-EXTRACT` — LOW, optional: extract a pure `basic_auth_header()` in `src/api/client.rs` so the Basic-auth encoding pin test covers jr's real code path (security LOW-2 / pr-reviewer suggestion).
 - `CHANGELOG-BASE64-EXACT-VERSIONS` — NIT: the base64 `[Unreleased]` entry says 0.22 -> 0.23, not exact patch versions.
+
+---
+
+## WIREMOCK-BASE64-UPSTREAM (recorded 2026-10-22, `D-412`) — NEW, OPEN-STANDING
+
+Source: human decision `D-412` (STAY on wiremock), research `research/wiremock-alternatives-2026-10-21.md` and `research/rust-dep-hygiene-practice-2026-10-21.md` (commit `480c59a9`). base64 0.22.1 remains in jr's dev-only graph via wiremock 0.6.5. Upstream fix contributed: fork https://github.com/Zious11/wiremock-rs, branch `chore/bump-base64-0.23`, commit `e242fe99` (base64 0.22 -> 0.23; Cargo.toml + Cargo.lock only; wiremock tests 100/100 pass; pre-existing clippy and cargo-deny failures exist on upstream main), PR https://github.com/LukeMathWalker/wiremock-rs/pull/179 (OPEN). Local clone: `/Users/zious/Documents/GITHUB/wiremock-rs`.
+
+- **Tracking / done-when:** PR #179 merged AND a wiremock 0.6.x release ships; then bump wiremock in jr's `Cargo.lock` (`Cargo.toml` `wiremock = "0.6"` already accepts it) via Dependabot or a maintenance PR. Verify `cargo tree --target=all -e normal,dev,build -i base64@0.22.1` is empty and `cargo deny check` stays green. The human wants this seen through to merge in jr.
+- **Follow-up etiquette:** one polite ping on #179 if there is no response after ~30 days (about 2026-11-21).
+- **Revisit triggers for migrating off wiremock:** a RustSec advisory, an incompatibility with required deps, or the author declaring abandonment. Standing constraint if migration is ever needed: module-at-a-time across multiple PRs (httpmock behind a jr-owned harness, ~24 PRs per research section 7).
