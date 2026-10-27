@@ -416,3 +416,27 @@ F5-pass-1 checkpoint.
 **(e) WIP branches.** None.
 
 **(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect only #923) and `gh run list --branch develop` for CI at `c72f8131`; also `gh pr view 179 --repo LukeMathWalker/wiremock-rs` for the upstream wiremock PR. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
+
+## Archived checkpoint v5.66 (SESSION-WRAP-PAUSE-2026-10-27, superseded by v5.67)
+
+**BUDGET -- READ FIRST:** PAUSED 2026-10-27 at MAINT-SWEEP-2026-10-15, steady state between cycles, no active cycle. No pass-budget concern. The sweep waits on the #923 merge go and triage of the new Dependabot batch #937-#943.
+
+**(a) Position (2026-10-27).** MAINT-SWEEP-2026-10-15 is in steady state between cycles with no active cycle (cycle-014 CLOSED + RELEASED as `v0.8.0-dev.2`). All three earlier pending decisions are resolved: `D-411` (no v0.7.x patch), #842 closed by the human on 2026-10-22, and `D-412` (stay on wiremock). Next:
+- (i) **#923** (dtolnay/rust-toolchain `e2a55d2f`->`683b588c`). Its soak window ended 2026-10-23T02:21Z. Its CI Gate shows SUCCESS but mergeable is UNKNOWN. Re-check CI against current develop, then wait for the human's go to merge. After merging, open a follow-up maintenance PR updating the CLAUDE.md msrv-gotcha SHA `e2a55d2f`->`683b588c`.
+- (ii) New Dependabot batch opened since the last session, NOT yet triaged: #937 (taiki-e/install-action 2.87.28->2.87.29), #938 (insta 1.48.0->1.49.0), #939 (tokio 1.53.2->1.53.3), #940 (proptest 1.11.0->1.12.0), #941 (saphyr-parser 0.0.12->0.2.2; MAJOR-ish and touches CI-gate review scope via `tests/common/wf.rs`; the exact `=0.0.12` pin is documented in CLAUDE.md; needs careful review), #942 (github/codeql-action/upload-sarif 4.38.3->4.39.0), #943 (step-security/harden-runner 2.22.1->2.22.2). Apply the existing soak/cooldown policy from `maintenance/dependabot-soak-research-2026-10-15.md`.
+- (iii) Then run the maintenance gate, then session-reviewer, then sweep closeout.
+
+**(b) Convergence.** N/A.
+
+**(c) In-flight.** No sub-agents running and none abandoned. Upstream PR https://github.com/LukeMathWalker/wiremock-rs/pull/179 is OPEN with 0 comments and 0 reviews; the local clone at `/Users/zious/Documents/GITHUB/wiremock-rs` is clean, on branch `chore/bump-base64-0.23`, in sync with its origin. The polite ping is due around 2026-11-21 (`WIREMOCK-BASE64-UPSTREAM`). The main jira-cli checkout is on stale local `develop` `fb9d015c` with pre-existing untracked `.claude/` files (`hooks/`, `pr-reviews/`, `settings.local.json.bak`, `spec-config.json`); these are the user's files, intentionally left uncommitted. Agents use `origin/develop`. There are no `.worktrees`.
+
+**(d) Pending human decisions and blockers.**
+- #923 merge go.
+- Triage approval for the #937-#943 batch.
+- The advisory `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` is still unset.
+- Engine items: the validate-dispatch-advance "D-2026" false positive (a regex lacking a word boundary), and `ENGINE-SUPERSEDED-PR-CLOSE-PATH`.
+- Carried items from prior checkpoints, unchanged.
+
+**(e) WIP branches.** None in jira-cli. External: Zious11/wiremock-rs `chore/bump-base64-0.23` @ `e242fe99`, pushed.
+
+**(f) Resume command.** In a new session in `/Users/zious/Documents/GITHUB/jira-cli` run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. First run `gh pr list --state open` (expect #923 and #937-#943) and `gh run list --branch develop`. This repo has no `wave-state.yaml`, so this checkpoint is the authoritative resume source.
