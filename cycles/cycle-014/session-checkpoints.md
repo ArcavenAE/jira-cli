@@ -390,3 +390,29 @@ F5-pass-1 checkpoint.
 **(e) WIP branches.** None.
 
 **(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect #923, and #842 if not yet closed) and `gh run list --branch develop` for CI at `c72f8131`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
+
+
+## Archived checkpoint v5.65 (2026-10-22, #842 closed + wiremock stay decision; superseded by v5.66 on 2026-10-27)
+
+**BUDGET -- READ FIRST:** PAUSED 2026-10-22 at MAINTENANCE SWEEP 2026-10-15 day 3 complete, steady-state between cycles. No pass-budget concern; #842 is closed (2026-10-22); the sweep waits only on the 2026-10-23 #923 re-check; wiremock-rs#179 is an external watch item.
+
+**(a) Position (2026-10-22).** MAINT-SWEEP-2026-10-15 day 3 done (2026-10-20): Dependabot #932 #931 #930 #934 #933 merged; MAINT-20261020-01 (#935 deny.toml/Cargo.toml comment accuracy + structural toml-parsed tests) merged; MAINT-20261020-02 (#936 combined base64 0.23 + reqwest 0.13.5 + hyper 1.12.0 + hyper-util 0.1.21 + want 0.3.2, superseding Dependabot #854/#842) merged by the human; develop green at `c72f8131` (run 39474013995). Decisions since: #842 closed manually by the human (2026-10-22T22:35:18Z), `D-411` no v0.7.x patch release (2026-10-20); `D-412` STAY on wiremock, upstream base64 0.23 PR wiremock-rs#179 contributed on 2026-10-22. No active cycle; cycle-014 stays CLOSED + RELEASED (`v0.8.0-dev.2`). LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. Latest decision `D-412`. Next: #923, then maintenance gate → session-reviewer → sweep report/closeout; watch #179.
+
+**(b) Convergence.** N/A (no adversarial loop in flight).
+
+**(c) In-flight.** None mid-step; no sub-agents abandoned. Open PRs:
+- **#923** dtolnay/rust-toolchain bump (commit `683b588c` dated 2026-10-16T02:21:45Z; soak ends 2026-10-23T02:21Z; CI green; validated -- only upstream change `scripts/update-revs.sh`, all 7 `uses:` updated). **#842** base64 0.22.1→0.23.1 (superseded by #936) was CLOSED manually by the human at 2026-10-22T22:35:18Z (verified via gh); no longer open.
+- External: **wiremock-rs#179** (https://github.com/LukeMathWalker/wiremock-rs/pull/179, OPEN; fork `Zious11/wiremock-rs` branch `chore/bump-base64-0.23` @ `e242fe99`; local clone `/Users/zious/Documents/GITHUB/wiremock-rs`).
+- Main checkout stays on stale local `develop` `fb9d015c` with untracked `.claude/` files (leave alone; agents use `origin/develop`).
+
+**(d) Pending human decisions / actions.**
+- (1) RESOLVED (2026-10-22T22:35:18Z): #842 (superseded by #936) closed manually by the human. Nothing pending.
+- (2) Merge #923 on/after 2026-10-23T02:21Z after re-checking CI against current develop (human go required), then a follow-up maintenance PR updating the CLAUDE.md msrv-gotcha SHA `e2a55d2f`→`683b588c` (~line 252).
+- (3) RESOLVED (`D-411`): NO v0.7.x patch release for RUSTSEC-2026-0346..0349. RESOLVED (`D-412`): stay on wiremock.
+- (4) `WIREMOCK-BASE64-UPSTREAM`: when wiremock-rs#179 merges AND a wiremock 0.6.x release ships, bump wiremock in jr's `Cargo.lock` (Dependabot or maintenance PR; `Cargo.toml` `wiremock = "0.6"` already accepts it); verify `cargo tree --target=all -e normal,dev,build -i base64@0.22.1` is empty and `cargo deny check` is green. One polite ping on #179 if no response by about 2026-11-21.
+- Low-priority follow-ups already in OPEN-STANDING-ITEMS: `ci.yml` cargo-deny-action pin comment, optional deny skip pruning, optional `basic_auth_header()` seam, CHANGELOG base64 patch-version nit, engine gaps M1-M5 plus `ENGINE-SUPERSEDED-PR-CLOSE-PATH`, `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory still unset.
+- Carried: session-review proposals 1-12 and L-007..L-015; DRAFT stories `S-PG-BC-INDEX-H1-SYNC-1`/`S-PG-FIX-PR-ADV-CONVERGENCE-1`; `engine-handoff-vsdd-factory.md`; `strict: true` deferred; GitHub #904/#906; stale `cycles/CURRENT` pointer.
+
+**(e) WIP branches.** None.
+
+**(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`; first `gh pr list --state open` (expect only #923) and `gh run list --branch develop` for CI at `c72f8131`; also `gh pr view 179 --repo LukeMathWalker/wiremock-rs` for the upstream wiremock PR. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
