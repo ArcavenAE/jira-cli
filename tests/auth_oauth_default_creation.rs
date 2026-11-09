@@ -400,8 +400,13 @@ proptest::proptest! {
             let tmp = tempfile::TempDir::new().unwrap();
             let cfg_dir = tmp.path().join("jr");
             let cache_dir = tmp.path().join("cache");
+            // A fresh test keychain service, so no case can fall back to the
+            // real `jr-jira-cli` service (guard:
+            // `auth_test_service_isolation_guard.rs`).
+            let svc = unique_service("vpauthdx001-svc");
             unsafe {
                 scrub_jr_env();
+                std::env::set_var("JR_SERVICE_NAME", &svc);
                 std::env::set_var("JR_CONFIG_DIR", &cfg_dir);
                 std::env::set_var("JR_CACHE_DIR", &cache_dir);
             }
@@ -438,6 +443,7 @@ proptest::proptest! {
             .await;
 
             unsafe {
+                std::env::remove_var("JR_SERVICE_NAME");
                 std::env::remove_var("JR_CONFIG_DIR");
                 std::env::remove_var("JR_CACHE_DIR");
             }
