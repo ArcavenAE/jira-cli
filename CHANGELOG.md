@@ -4,6 +4,14 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`jr issue link KEY1 KEY2 --type T` no longer records the link backwards.** KEY1 is the
+  subject of the type's outward verb ("KEY1 blocks KEY2"), as the help says, but the request
+  sent KEY1 as `outwardIssue`, so Jira stored "KEY1 is blocked by KEY2". KEY1 is now sent as
+  `inwardIssue` and KEY2 as `outwardIssue`, for every link type. Links already created the
+  old way keep their stored direction; remove them with `jr issue unlink` and link again.
+
 ### Changed
 
 - **CI: scheduled-workflow cadence rebalanced** to reduce runner-queue contention with

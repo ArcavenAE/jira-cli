@@ -4,18 +4,23 @@ use anyhow::Result;
 use serde_json::json;
 
 impl JiraClient {
-    /// Create a link between two issues.
-    /// outward_key gets the "outward" label (e.g., "blocks"),
-    /// inward_key gets the "inward" label (e.g., "is blocked by").
+    /// Create a link between two issues, read as "`subject_key` <outward verb of
+    /// `link_type`> `object_key`" (for Blocks: "subject blocks object").
+    ///
+    /// Jira's body names the roles from the stored link's side: the subject of
+    /// the outward verb is sent as `inwardIssue` and its object as
+    /// `outwardIssue`, so the subject's own `issuelinks` lists the object under
+    /// `outwardIssue` and reads "blocks <object>". The direction comes from the
+    /// type's own verbs, so it holds for every link type.
     pub async fn create_issue_link(
         &self,
-        outward_key: &str,
-        inward_key: &str,
+        subject_key: &str,
+        object_key: &str,
         link_type: &str,
     ) -> Result<()> {
         let body = json!({
-            "outwardIssue": {"key": outward_key},
-            "inwardIssue": {"key": inward_key},
+            "inwardIssue": {"key": subject_key},
+            "outwardIssue": {"key": object_key},
             "type": {"name": link_type}
         });
         self.post_no_content("/rest/api/3/issueLink", &body).await
