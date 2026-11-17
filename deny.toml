@@ -1,5 +1,7 @@
 [advisories]
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained and the advisory names no safe upgrade; it comes in through jr and is to be replaced later" },
+]
 
 [licenses]
 allow = [
