@@ -390,7 +390,12 @@ jobs:
   alpha-homebrew:
     name: Alpha Update Homebrew Tap
     needs: alpha-sign
-    if: needs.alpha-sign.result == 'success' && vars.HOMEBREW_TAP_REPO != ''
+    # Skipped: the tap's update-formulas.yml syncs jr-a from the release with a signed commit (ArcavenAE/homebrew-tap#16).
+    # This job pushed an unsigned commit, which the tap's required_signatures ruleset rejects. Kept so it can be re-enabled.
+    if: >-
+      false
+      && needs.alpha-sign.result == 'success'
+      && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -711,8 +716,13 @@ jobs:
   stable-homebrew:
     name: Update Homebrew Tap
     needs: stable-sign
+    # Skipped: the tap's update-formulas.yml syncs jr and jr-d from the release with a signed commit
+    # (ArcavenAE/homebrew-tap#16). This job pushed an unsigned commit, which the tap's required_signatures ruleset
+    # rejects. The rc and b channels (jr-rc, jr-b) are not synced by the tap yet and get tap-sync rows when those channels
+    # first release. Kept so it can be re-enabled.
     if: >-
-      needs.stable-sign.result == 'success'
+      false
+      && needs.stable-sign.result == 'success'
       && needs.stable-sign.outputs.channel != 'unknown'
       && vars.HOMEBREW_TAP_REPO != ''
     permissions:
